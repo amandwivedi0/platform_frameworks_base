@@ -1,12 +1,13 @@
 package android.content.res;
 
+import android.annotation.SuppressLint;
 import android.os.SystemProperties;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-/** @hide */
+@SuppressLint("StaticUtils")
 public class ColorUtils {
     private static final String TAG = "ColorUtils";
     private static final float QS_MIN_LIGHTNESS = 0.0f;
@@ -37,7 +38,11 @@ public class ColorUtils {
     }
 
     public static int genRandomQsColor() {
-        return genRandomQsColor((long) SystemProperties.getInt("ro.boottime.init", 0));
+        return genRandomQsColor((long) getBootTime());
+    }
+
+    public static int getBootTime() {
+        return SystemProperties.getInt("ro.boottime.init", 0);
     }
 
     private static int genRandomAccentColor(boolean isThemeDark, Random r) {
