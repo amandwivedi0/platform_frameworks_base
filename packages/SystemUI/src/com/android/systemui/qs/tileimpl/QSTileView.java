@@ -16,7 +16,10 @@ package com.android.systemui.qs.tileimpl;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.ColorUtils;
 import android.content.res.Configuration;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.service.quicksettings.Tile;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -44,11 +47,13 @@ public class QSTileView extends QSTileBaseView {
     private ImageView mPadLock;
     private int mState;
     private ViewGroup mLabelContainer;
-    private View mExpandIndicator;
+    private ImageView mExpandIndicator;
     private View mExpandSpace;
     private ColorStateList mColorLabelDefault;
     private ColorStateList mColorLabelActive;
     private ColorStateList mColorLabelUnavailable;
+    private int mColorLabelActiveRandom;
+    private int setQsLabelUseNewTint;
 
     public QSTileView(Context context, QSIconView icon) {
         this(context, icon, false);
@@ -67,6 +72,7 @@ public class QSTileView extends QSTileBaseView {
         setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
         mColorLabelDefault = Utils.getColorAttr(getContext(), android.R.attr.textColorPrimary);
         mColorLabelActive = Utils.getColorAttr(getContext(), android.R.attr.colorAccent);
+        mColorLabelActiveRandom = ColorUtils.genRandomAccentColor(isThemeDark(context));
         // The text color for unavailable tiles is textColorSecondary, same as secondaryLabel for
         // contrast purposes
         mColorLabelUnavailable = Utils.getColorAttr(getContext(),
@@ -119,6 +125,9 @@ public class QSTileView extends QSTileBaseView {
     @Override
     protected void handleStateChanged(QSTile.State state) {
         super.handleStateChanged(state);
+        setQsLabelUseNewTint = Settings.System.getIntForUser(getContext().getContentResolver(),
+                    Settings.System.QS_LABEL_USE_NEW_TINT, 1, UserHandle.USER_CURRENT);
+
         if (!Objects.equals(mLabel.getText(), state.label) || mState != state.state) {
             mLabel.setTextColor(state.state == Tile.STATE_UNAVAILABLE ? mColorLabelUnavailable
                     : mColorLabelDefault);
@@ -130,14 +139,24 @@ public class QSTileView extends QSTileBaseView {
             mSecondLine.setVisibility(TextUtils.isEmpty(state.secondaryLabel) ? View.GONE
                     : View.VISIBLE);
         }
-        boolean setQsUseNewTint = Settings.System.getIntForUser(getContext().getContentResolver(),
-                Settings.System.QS_PANEL_BG_USE_NEW_TINT, 1, UserHandle.USER_CURRENT) == 1;
-        if (setQsUseNewTint) {
-            if (state.state == Tile.STATE_ACTIVE) {
+        if (state.state == Tile.STATE_ACTIVE) {
+            if (setQsLabelUseNewTint == 1) {
                 mLabel.setTextColor(mColorLabelActive);
-            } else if (state.state == Tile.STATE_INACTIVE) {
+                mSecondLine.setTextColor(mColorLabelActiveRandom);
+                mExpandIndicator.setImageTintList(mColorLabelDefault);
+            } else if (setQsLabelUseNewTint == 2) {
+                mLabel.setTextColor(mColorLabelActive);
+                mSecondLine.setTextColor(mColorLabelActive);
+                mExpandIndicator.setImageTintList(mColorLabelActive);
+            } else {
                 mLabel.setTextColor(mColorLabelDefault);
+                mSecondLine.setTextColor(mColorLabelActive);
+                mExpandIndicator.setImageTintList(mColorLabelActive);
             }
+        } else if (state.state == Tile.STATE_INACTIVE) {
+            mLabel.setTextColor(mColorLabelDefault);
+            mSecondLine.setTextColor(mColorLabelDefault);
+            mExpandIndicator.setImageTintList(mColorLabelDefault);
         }
         boolean dualTarget = DUAL_TARGET_ALLOWED && state.dualTarget;
         mExpandIndicator.setVisibility(dualTarget ? View.VISIBLE : View.GONE);
@@ -161,6 +180,17 @@ public class QSTileView extends QSTileBaseView {
         mLabelContainer.setOnLongClickListener(longClick);
         mLabelContainer.setClickable(false);
         mLabelContainer.setLongClickable(false);
+    }
+
+    private static Boolean isThemeDark(Context context) {
+        switch (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) {
+            case Configuration.UI_MODE_NIGHT_YES:
+              return true;
+            case Configuration.UI_MODE_NIGHT_NO:
+              return false;
+            default:
+              return false;
+        }
     }
 
     @Override
