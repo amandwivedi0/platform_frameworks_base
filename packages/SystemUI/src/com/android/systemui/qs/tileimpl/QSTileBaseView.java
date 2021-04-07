@@ -75,8 +75,9 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
     private final ImageView mBg;
     private int mColorActive;
     private int mColorActiveAlpha;
+    private int mColorTwelveAlpha;
     private final int mColorInactive;
-    private final int mColorDisabled;
+    private int mColorDisabled;
     private int mCircleColor;
     private int mBgSize;
 
@@ -153,6 +154,10 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
             mColorActive = mColorActiveAlpha;
         } else if (setQsUseNewTint == 3) {
             mColorActive = ColorUtils.genRandomAccentColor(isThemeDark(context), (long) (ColorUtils.getBootTime() + mIcon.toString().hashCode()));
+        } else if (setQsUseNewTint == 4) {
+            mColorActive = Utils.getColorAttrDefaultColor(context, android.R.attr.colorAccent);
+            mColorTwelveAlpha = adjustAlpha(mColorActive, 0.15f);
+            mColorDisabled = mColorTwelveAlpha;
         } else {
             mColorActive = Utils.getColorAttrDefaultColor(context, android.R.attr.colorAccent);
         }
