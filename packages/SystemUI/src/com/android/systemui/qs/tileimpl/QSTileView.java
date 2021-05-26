@@ -141,7 +141,7 @@ public class QSTileView extends QSTileBaseView {
         }
         if (state.state == Tile.STATE_ACTIVE) {
             if (setQsLabelUseNewTint == 1) {
-                mLabel.setTextColor(mColorLabelActive);
+                mLabel.setTextColor(mColorLabelActiveRandom);
                 mSecondLine.setTextColor(mColorLabelActiveRandom);
                 mExpandIndicator.setImageTintList(mColorLabelDefault);
             } else if (setQsLabelUseNewTint == 2) {
